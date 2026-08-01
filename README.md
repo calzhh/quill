@@ -13,7 +13,7 @@ Swift binary, menu-bar tray, no app bundle.
 ```sh
 cd quill
 swift build -c release
-sudo cp .build/release/quill /usr/local/bin/quill
+sudo install -m 755 .build/release/quill /usr/local/bin/quill
 quill install --launch-at-login   # optional — runs in the background on login
 ```
 
@@ -121,6 +121,12 @@ quill install --uninstall
   per-process picker if it bothers you).
 - If recordings come out silent, check System Settings → Privacy & Security →
   Screen & System Audio Recording.
+- **Never run quill under `sudo`.** As root it writes to
+  `/var/root/Recordings`, and its microphone / system-audio grants land in
+  root's TCC database — so your normal user install keeps re-prompting. If
+  plain `quill` says "permission denied", the installed binary's mode is wrong
+  (a `umask 077` shell makes `swift build` emit a `700` binary, and `cp`
+  carries that over): `sudo chmod 755 /usr/local/bin/quill`.
 - Parakeet v2 is English-only. Other languages will come with the Whisper
   engine.
 - The binary embeds its Info.plist (`__TEXT,__info_plist`) so TCC can
