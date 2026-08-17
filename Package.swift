@@ -9,24 +9,30 @@ let package = Package(
         .package(url: "https://github.com/FluidInference/FluidAudio.git", from: "0.7.0"),
     ],
     targets: [
+        .target(name: "QuillArtwork"),
         .executableTarget(
             name: "quill",
             dependencies: [
+                "QuillArtwork",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "FluidAudio", package: "FluidAudio"),
             ],
             exclude: ["Info.plist"],
             linkerSettings: [
-                // Embed Info.plist into the binary so TCC can attribute the
-                // system-audio-capture permission to quill itself when it
-                // runs as a LaunchAgent (no .app bundle to carry a plist).
+                // Embed Info.plist into the binary so TCC can attribute
+                // system-audio-capture permissions consistently whether
+                // quill runs from the app bundle or as a direct executable.
                 .unsafeFlags([
                     "-Xlinker", "-sectcreate",
                     "-Xlinker", "__TEXT",
                     "-Xlinker", "__info_plist",
                     "-Xlinker", "Sources/quill/Info.plist",
-                ]),
+                ])
             ]
+        ),
+        .executableTarget(
+            name: "quill-icon",
+            dependencies: ["QuillArtwork"]
         ),
     ]
 )

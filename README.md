@@ -5,16 +5,25 @@ click records your mic and all system audio as two separate tracks; when you
 stop, quill transcribes both on-device and writes a speaker-tagged transcript.
 Nothing ever leaves the machine.
 
-Named for the feather. Sibling of [parrot](https://github.com/digimata/parrot), same skeleton: single
-Swift binary, menu-bar tray, no app bundle.
+Named for the feather. Sibling of [parrot](https://github.com/digimata/parrot), with a
+macOS application bundle, menu-bar tray, and no Dock icon.
 
 ## Install
 
 ```sh
 cd quill
-swift build -c release
-sudo install -m 755 .build/release/quill /usr/local/bin/quill
-quill install --launch-at-login   # optional — runs in the background on login
+./scripts/build-app.sh --install
+open /Applications/Quill.app
+```
+
+The app appears in `/Applications` and Finder with the feather icon. Quill is
+still a menu-bar-only accessory (`LSUIElement`), so it intentionally does not
+show a Dock icon.
+
+Optional — run at login:
+
+```sh
+/Applications/Quill.app/Contents/MacOS/quill install --launch-at-login
 ```
 
 **Requires:** macOS 15+ (Core Audio process taps for system audio — no
@@ -23,7 +32,7 @@ transcription speed.
 
 ## How to use
 
-1. **Run it** (`quill` in a terminal, or the LaunchAgent).
+1. **Run it** (open `/Applications/Quill.app` from Finder, or launch its bundled executable).
 2. **Click the feather in the menu bar → Start recording.** First use prompts
    for microphone and System Audio Recording permissions. While recording, the
    icon turns red with a running elapsed counter, and macOS shows the purple
@@ -97,16 +106,16 @@ Optional, at `~/.config/quill/config.json`:
 ## CLI
 
 ```sh
-quill                        # run the menu-bar daemon (^C to quit)
-quill run --out <dir>        # custom recordings root (default ~/Recordings)
-quill doctor                 # check permissions, recordings folder, models
-quill install --launch-at-login
-quill install --uninstall
+/Applications/Quill.app/Contents/MacOS/quill                        # run the menu-bar daemon (^C to quit)
+/Applications/Quill.app/Contents/MacOS/quill run --out <dir>        # custom recordings root (default ~/Recordings)
+/Applications/Quill.app/Contents/MacOS/quill doctor                 # check permissions, recordings folder, models
+/Applications/Quill.app/Contents/MacOS/quill install --launch-at-login
+/Applications/Quill.app/Contents/MacOS/quill install --uninstall
 ```
 
 ## Stack
 
-- **Swift** — single SPM executable target
+- **Swift** — SPM executable packaged as a macOS application bundle
 - **Core Audio process tap** (`AudioHardwareCreateProcessTap`, macOS 14.2+) —
   system audio capture via a private aggregate device
 - **AVAudioEngine** — mic capture
@@ -124,10 +133,10 @@ quill install --uninstall
 - **Never run quill under `sudo`.** As root it writes to
   `/var/root/Recordings`, and its microphone / system-audio grants land in
   root's TCC database — so your normal user install keeps re-prompting. If
-  plain `quill` says "permission denied", the installed binary's mode is wrong
-  (a `umask 077` shell makes `swift build` emit a `700` binary, and `cp`
-  carries that over): `sudo chmod 755 /usr/local/bin/quill`.
+  the bundled executable says "permission denied", rebuild with
+  `scripts/build-app.sh --install` so the app binary is installed mode 755.
 - Parakeet v2 is English-only. Other languages will come with the Whisper
   engine.
-- The binary embeds its Info.plist (`__TEXT,__info_plist`) so TCC can
-  attribute permissions to quill itself when running as a LaunchAgent.
+- The executable embeds its Info.plist (`__TEXT,__info_plist`) so TCC can
+  attribute permissions to quill itself when running as a LaunchAgent. The
+  app bundle also carries the Finder and user-facing application metadata.

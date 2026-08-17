@@ -3,9 +3,8 @@ import Foundation
 
 /// Manage quill's LaunchAgent so the daemon starts at login.
 ///
-/// We deliberately do NOT use SMAppService.mainApp here — that requires a full
-/// .app bundle. Since quill ships as a single binary in /usr/local/bin, a
-/// plain LaunchAgent plist is the simpler, more honest mechanism.
+/// The LaunchAgent points at the executable inside the installed app bundle,
+/// while retaining a direct-executable fallback for development.
 struct Install: ParsableCommand {
     static let configuration = CommandConfiguration(
         abstract: "Install or remove the launch-at-login LaunchAgent."
@@ -95,23 +94,24 @@ struct Install: ParsableCommand {
     }
 
     private func resolveBinaryPath() throws -> String {
-        // /usr/local/bin/quill is the canonical install path. Honor a real
-        // location if running from elsewhere (e.g. dev).
-        let candidate = "/usr/local/bin/quill"
-        if FileManager.default.isExecutableFile(atPath: candidate) {
-            return candidate
+        let appBinary = "/Applications/Quill.app/Contents/MacOS/quill"
+        if FileManager.default.isExecutableFile(atPath: appBinary) {
+            return appBinary
         }
-        // Fall back to the running executable's resolved path.
+
+        // Fall back to the running executable's resolved path (e.g. dev builds
+        // or an existing command-line install).
         let argv0 = CommandLine.arguments.first ?? "quill"
         if argv0.hasPrefix("/"), FileManager.default.isExecutableFile(atPath: argv0) {
             FileHandle.standardError.write(Data(
-                "note: /usr/local/bin/quill not found; using \(argv0)\n".utf8
+                "note: /Applications/Quill.app not found; using \(argv0)\n".utf8
             ))
             return argv0
         }
-        FileHandle.standardError.write(Data(
-            "couldn't locate the quill binary. install it to /usr/local/bin/quill first.\n".utf8
-        ))
+        FileHandle.standardError.write(Data((
+            "couldn't locate Quill.app or the quill executable. " +
+            "run scripts/build-app.sh --install first.\n"
+        ).utf8))
         throw ExitCode(1)
     }
 
