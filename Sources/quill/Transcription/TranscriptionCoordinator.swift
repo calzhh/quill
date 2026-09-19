@@ -3,7 +3,7 @@ import Foundation
 /// Post-recording pipeline: a serial queue of session folders to transcribe.
 /// mic.caf → "me", system.caf → "them"; each track's segments are shifted by
 /// its start offset, merged by timestamp, and written as transcript.json
-/// (canonical) plus transcript.md (readable). The filesystem is the queue —
+/// (canonical) plus README.MD (readable). The filesystem is the queue —
 /// `resumePending()` rescans at launch, so a crash or quit mid-transcription
 /// just retries on next run. Failures append to the session's transcribe.log
 /// and never block later jobs.
@@ -244,7 +244,7 @@ private struct Transcript: Codable {
     let created_at: String
     let segments: [Segment]
 
-    /// Write transcript.json and render transcript.md. Both writes are atomic
+    /// Write transcript.json and render README.MD. Both writes are atomic
     /// (temp file + rename), so a partially written transcript never exists on
     /// disk — resumePending treats presence of transcript.json as "done".
     func write(to dir: URL) throws {
@@ -253,7 +253,7 @@ private struct Transcript: Codable {
         try encoder.encode(self)
             .write(to: dir.appendingPathComponent("transcript.json"), options: .atomic)
         try Data(rendered(title: dir.lastPathComponent).utf8)
-            .write(to: dir.appendingPathComponent("transcript.md"), options: .atomic)
+            .write(to: dir.appendingPathComponent("README.MD"), options: .atomic)
     }
 
     private func rendered(title: String) -> String {

@@ -49,7 +49,7 @@ Each session lands in `~/Recordings/<yyyy.MM.dd-HHmm>/`:
 | `system.caf` | everything the Mac played — the other side of the call (AAC) |
 | `meta.json` | start/end timestamps, duration, per-track start offsets |
 | `transcript.json` | canonical transcript — engine provenance + timed, speaker-tagged segments |
-| `transcript.md` | the same transcript rendered for reading |
+| `README.MD` | the same transcript rendered for reading |
 | `transcribe.log` | transcription progress/errors for this session |
 
 Two tracks on purpose: speech models do better on clean single-source audio,
